@@ -1,19 +1,20 @@
 package ru.romanisupov;
 
+import ru.romanisupov.utils.FileWorker;
+import ru.romanisupov.utils.Sorter;
+
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
-public class Worker {
+public class Worker extends Thread {
     private final BlockingQueue<Job> jobBlockingQueue;
     private final List<Integer> jobIds;
     private final String tempPath;
     private final String readyPath;
     private final String extension;
-    private boolean isRunning;
 
     public Worker(String tempPath, String readyPath, String extension) {
         this.tempPath = tempPath;
@@ -21,20 +22,6 @@ public class Worker {
         this.extension = extension;
         jobBlockingQueue = new LinkedBlockingQueue<>();
         jobIds = new ArrayList<>();
-        isRunning = false;
-    }
-
-    private class QueueWorker extends Thread {
-        private final Job job;
-
-        private QueueWorker(Job job) {
-            this.job = job;
-        }
-
-        @Override
-        public void run() {
-            complete(job);
-        }
     }
 
     public void add(Job job) {
@@ -64,25 +51,20 @@ public class Worker {
         return file.exists();
     }
 
+    @Override
     public void run() {
-        isRunning = true;
-        while (!jobBlockingQueue.isEmpty()) {
-            try {
-                Job job = jobBlockingQueue.take();
-                jobIds.remove(0);
-                QueueWorker queueWorker = new QueueWorker(job);
-                queueWorker.start();
-                queueWorker.join();
-            }
-            catch (InterruptedException e) {
-                e.printStackTrace();
+        while (true) {
+            if (!jobBlockingQueue.isEmpty()) {
+                try {
+                    Job job = jobBlockingQueue.take();
+                    jobIds.remove(0);
+                    complete(job);
+                }
+                catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
             }
         }
-        isRunning = false;
-    }
-
-    public boolean isRunning() {
-        return isRunning;
     }
 
     private void complete(final Job job) {
@@ -91,11 +73,6 @@ public class Worker {
         int[] array = FileWorker.readArrayFromFile(filePath);
         Sorter.sort(array, job.getConcurrency());
         filePath = readyPath + job.getId() + extension;
-        try {
-            FileWorker.writeArrayToFile(array, filePath);
-        }
-        catch (IOException e) {
-            e.printStackTrace();
-        }
+        FileWorker.writeArrayToFile(array, filePath);
     }
 }

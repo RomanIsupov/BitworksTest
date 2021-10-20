@@ -1,4 +1,4 @@
-package ru.romanisupov;
+package ru.romanisupov.utils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -23,6 +23,7 @@ public class Sorter {
     }
 
     public static void sort(final int[] array, final int threadsAmount) throws IllegalArgumentException {
+        System.out.println("Sorting array");
         if (threadsAmount > array.length) {
             throw new IllegalArgumentException("threadsAmount > n");
         }

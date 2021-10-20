@@ -1,7 +1,11 @@
-package ru.romanisupov;
+package ru.romanisupov.server;
 
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
+import ru.romanisupov.utils.FileWorker;
+import ru.romanisupov.Job;
+import ru.romanisupov.JobState;
+import ru.romanisupov.Worker;
 
 
 import java.io.IOException;
@@ -45,9 +49,6 @@ public class RequestHandler implements HttpHandler {
     private Map<String, String> addJobToQueue(Job job) {
         Map<String, String> response = new HashMap<>();
         worker.add(job);
-        if (!worker.isRunning()) {
-            worker.run();
-        }
         response.put("jobId", String.valueOf(job.getId()));
         return response;
     }
@@ -55,9 +56,9 @@ public class RequestHandler implements HttpHandler {
     private Map<String, String> getJobState(int jobId) {
         Map<String, String> response = new HashMap<>();
         JobState state = worker.getJobState(jobId);
-        response.put("state", state.name());
         int[] data = state == JobState.READY ? FileWorker.readArrayFromFile(worker.getReadyFilePath(jobId)) : new int[0];
         response.put("data", Arrays.toString(data));
+        response.put("state", state.name());
         return response;
     }
 

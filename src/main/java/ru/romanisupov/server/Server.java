@@ -1,6 +1,7 @@
-package ru.romanisupov;
+package ru.romanisupov.server;
 
 import com.sun.net.httpserver.HttpServer;
+import ru.romanisupov.Worker;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -23,6 +24,8 @@ public class Server extends Thread {
         httpServer.createContext("/", new RequestHandler(worker));
         httpServer.setExecutor(null);
         httpServer.start();
+        worker.start();
+        System.out.println("Starting worker");
     }
 
     @Override
